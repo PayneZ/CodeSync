@@ -7,7 +7,7 @@ max_steps = 3
 batch_size = 128
 data_dir = '/tmp/cifar10_data/cifar-10-batches-bin'
 
-def variable_with_weight_loss(shape, stddev, w1):
+def variable_with_weight_loss(shape, stddev, wl):
     var = tf.Variable(tf.truncated_normal(shape, stddev=stddev))
     if wl is not None:
         weight_loss = tf.multiply(tf.nn.l2_loss(var), wl, name='weight_loss')
@@ -16,7 +16,7 @@ def variable_with_weight_loss(shape, stddev, w1):
 
 cifar10.maybe_download_and_extract()
 
-images_train, labels_train = cifar10_input.distored_inputs(
+images_train, labels_train = cifar10_input.distorted_inputs(
     data_dir=data_dir, batch_size=batch_size)
 
 images_test, labels_test = cifar10_input.inputs(eval_data=True,
@@ -37,7 +37,7 @@ norm1 = tf.nn.lrn(pool1, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75)
 weight2 = variable_with_weight_loss(shape=[5, 5, 64, 64], stddev=5e-2, wl=0.0)
 kernel2 = tf.nn.conv2d(norm1, weight2, [1, 1, 1, 1], padding='SAME')
 bias2 = tf.Variable(tf.constant(0.1, shape=[64]))
-conv2 = tf.nn.relu(tf.nn.bias.add(kernel2, bias2))
+conv2 = tf.nn.relu(tf.nn.bias_add(kernel2, bias2))
 norm2 = tf.nn.lrn(conv2, 4, bias=1.0, alpha=0.001 / 9.0, beta = 0.75)
 pool2 = tf.nn.max_pool(norm2, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1],
                        padding='SAME')
