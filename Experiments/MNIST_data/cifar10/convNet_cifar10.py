@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 import time
 
-max_steps = 3
+max_steps = 3000
 batch_size = 128
 data_dir = '/tmp/cifar10_data/cifar-10-batches-bin'
 
@@ -28,6 +28,7 @@ label_holder = tf.placeholder(tf.int32, [batch_size])
 
 # Inference Part
 weight1 = variable_with_weight_loss(shape=[5, 5, 3, 64], stddev=5e-2, wl=0.0)
+# kernel output: [batch_size, 24, 24, 64]
 kernel1 = tf.nn.conv2d(image_holder, weight1, [1, 1, 1, 1], padding='SAME')
 bias1 = tf.Variable(tf.constant(0.0, shape=[64]))
 conv1 = tf.nn.relu(tf.nn.bias_add(kernel1, bias1))
@@ -90,5 +91,18 @@ for step in range(max_steps):
         format_str = ('step %d, loss=%.2f (%.1f exmaples/sec; %.3f sec/batch)')
         print(format_str % (step, loss_value, examples_per_sec, sec_per_batch))
 
+num_examples = 10000
+import math
+num_iter = int(math.ceil(num_examples / batch_size))
+true_count = 0
+total_sample_count = num_iter * batch_size
+step = 0
+while step < num_iter:
+    image_batch, label_batch = sess.run([images_test, labels_test])
+    predictions = sess.run([top_k_op], feed_dict={image_holder: image_batch,
+                                                  label_holder: label_batch})
+    true_count += np.sum(predictions)
+    step += 1
 
-
+precision = true_count / total_sample_count
+print('precision @ 1 = %.3f' % precision)
